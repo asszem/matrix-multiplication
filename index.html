@@ -258,9 +258,19 @@
         }
 
         .step-log-toolbar {
-            display: flex;
-            justify-content: flex-end;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
             margin-bottom: 0.35rem;
+        }
+
+        .step-log-toolbar .step-counter {
+            justify-self: center;
+            margin: 0;
+        }
+
+        .step-log-toolbar .reverse-order-btn {
+            justify-self: end;
         }
 
         .reverse-order-btn.active {
@@ -516,7 +526,6 @@
             <button id="pauseBtn" class="step-btn" type="button">Pause</button>
             <button id="playBtn" class="step-btn" type="button">Start</button>
         </div>
-        <div id="stepCounter" class="step-counter">0 of 0</div>
         <div class="step-controls">
             <div class="step-controls-row">
                 <button id="firstStepBtn" class="step-btn" type="button">First Step</button>
@@ -711,7 +720,10 @@
     function updateStepCounter() {
         const current = currentStepIndex >= 0 ? currentStepIndex + 1 : 0;
         const total = steps.length;
-        document.getElementById('stepCounter').textContent = `Step ${current} of ${total}`;
+        const counterEl = document.getElementById('stepCounter');
+        if (counterEl) {
+            counterEl.textContent = `Step ${current} of ${total}`;
+        }
     }
 
     function updateCompatibilityIndicator() {
@@ -737,7 +749,7 @@
     function renderStepLog() {
         const stepLog = document.getElementById('stepLog');
         if (!steps.length || currentStepIndex < 0) {
-            stepLog.innerHTML = `<div class="step-log-toolbar"><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Reverse step order" aria-label="Reverse step order">⇅</button></div>`;
+            stepLog.innerHTML = `<div class="step-log-toolbar"><span></span><div id="stepCounter" class="step-counter">Step 0 of 0</div><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Reverse step order" aria-label="Reverse step order">⇅</button></div>`;
             const reverseOrderBtn = document.getElementById('reverseOrderBtn');
             if (reverseOrderBtn) {
                 reverseOrderBtn.addEventListener('click', () => {
@@ -775,7 +787,9 @@
 
         const tableRows = grouped.map((group) => {
             const startIndex = isReverseOrder ? group.rows[0].idx : group.rows[group.rows.length - 1].idx;
-            const currentGroupValue = group.rows[0].step.nextSum;
+            const currentGroupValue = isReverseOrder
+                ? group.rows[group.rows.length - 1].step.nextSum
+                : group.rows[0].step.nextSum;
             return group.rows.map((row, rowIdx) => {
                 const step = row.step;
                 const groupCells = rowIdx === 0
@@ -789,14 +803,21 @@
                     rowIdx === group.rows.length - 1 ? 'group-end' : '',
                     rowIdx === highlightIdx ? 'group-last-step' : ''
                 ].filter(Boolean).join(' ');
-                const cumulative = step.prevSum === 0
-                    ? `${step.nextSum}`
-                    : `${step.prevSum} + ${step.product} = ${step.nextSum}`;
+                const terms = [];
+                for (let s = 0; s <= row.idx; s++) {
+                    const t = steps[s];
+                    if (t.i === step.i && t.j === step.j) {
+                        terms.push(t.product);
+                    }
+                }
+                const cumulative = terms.length > 0
+                    ? (terms.length === 1 ? `${step.nextSum}` : `${terms.join(' + ')} = ${step.nextSum}`)
+                    : `${step.nextSum}`;
                 return `<tr class="${rowClass}" data-step-index="${row.idx}">${groupCells}<td><span class="step-pill a">A(${step.i + 1}, ${step.k + 1})</span> x <span class="step-pill b">B(${step.k + 1}, ${step.j + 1})</span></td><td>${step.aVal} x ${step.bVal}</td><td>${step.product}</td><td>${cumulative}</td><td>${row.idx + 1}/${steps.length}</td></tr>`;
             }).join('');
         }).join('');
 
-        stepLog.innerHTML = `<div class="step-log-toolbar"><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Reverse step order" aria-label="Reverse step order">⇅</button></div><table class="steps-table"><colgroup><col style="width: 11%;"><col style="width: 12%;"><col style="width: 24%;"><col style="width: 14%;"><col style="width: 10%;"><col style="width: 21%;"><col style="width: 8%;"></colgroup><thead><tr><th>Group</th><th>Result</th><th>Cells</th><th>Numbers</th><th>Product</th><th>Running Total</th><th>Step</th></tr></thead><tbody>${tableRows}</tbody></table>`;
+        stepLog.innerHTML = `<div class="step-log-toolbar"><span></span><div id="stepCounter" class="step-counter"></div><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Reverse step order" aria-label="Reverse step order">⇅</button></div><table class="steps-table"><colgroup><col style="width: 11%;"><col style="width: 12%;"><col style="width: 24%;"><col style="width: 14%;"><col style="width: 10%;"><col style="width: 21%;"><col style="width: 8%;"></colgroup><thead><tr><th>Group</th><th>Result</th><th>Cells</th><th>Numbers</th><th>Product</th><th>Running Total</th><th>Step</th></tr></thead><tbody>${tableRows}</tbody></table>`;
 
         const reverseOrderBtn = document.getElementById('reverseOrderBtn');
         if (reverseOrderBtn) {
@@ -805,6 +826,7 @@
                 renderStepLog();
             });
         }
+        updateStepCounter();
 
         stepLog.querySelectorAll('tr.step-row').forEach((rowEl) => {
             rowEl.addEventListener('mouseenter', () => {
