@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -244,17 +244,21 @@
 
         .reverse-order-btn {
             position: static;
-            width: 32px;
+            min-width: 132px;
             height: 32px;
             border: 1px solid #b0bec5;
             border-radius: 8px;
             background: white;
             color: #455a64;
-            font-size: 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+            padding: 0 0.55rem;
         }
 
         .step-log-toolbar {
@@ -346,7 +350,7 @@
 
         .steps-table .group-name-cell {
             min-width: 92px;
-            vertical-align: top;
+            vertical-align: middle;
         }
 
         .steps-table .group-result-cell {
@@ -354,8 +358,12 @@
         }
 
         .group-name-content {
-            display: block;
-            padding-top: 6px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
             font-weight: 700;
             color: #1b5e20;
             line-height: 1;
@@ -405,25 +413,25 @@
         }
 
         .steps-table tr.step-row:hover td {
-            background: #f6fbff;
+            background: inherit;
         }
 
         .steps-table tr.group-last-step td {
-            background: #f3fff5;
+            background: inherit;
             font-weight: 700;
         }
 
         .steps-table td.group-last-step-anchor {
-            background: #f3fff5;
+            background: inherit;
             font-weight: 700;
         }
 
         .steps-table tr.group-last-step:hover td {
-            background: #edf9f0;
+            background: inherit;
         }
 
         .steps-table td.group-hover-linked {
-            background: #edf9f0;
+            background: inherit;
         }
 
         .step-pill {
@@ -461,8 +469,11 @@
         }
 
         .group-result-target:hover {
-            border-width: 2px;
-            border-color: #f57f17;
+            border-color: transparent;
+        }
+
+        .steps-table td.group-pair-focus {
+            box-shadow: inset 0 0 0 2px #f57f17;
         }
 
         .group-result-value {
@@ -478,12 +489,12 @@
 
         .steps-table tr.step-row:hover td.group-name-cell,
         .steps-table tr.step-row:hover td.group-result-cell {
-            background: #f6fbff;
+            background: inherit;
         }
 
         .steps-table tr.group-last-step:hover td.group-name-cell,
         .steps-table tr.group-last-step:hover td.group-result-cell {
-            background: #edf9f0;
+            background: inherit;
         }
 
         .step-controls {
@@ -567,14 +578,14 @@
     <div class="step-panel">
         <div class="step-controls-row">
             <button id="pauseBtn" class="step-btn" type="button">Pause</button>
-            <button id="playBtn" class="step-btn" type="button">Start</button>
+            <button id="playBtn" class="step-btn" type="button">Start (Enter)</button>
         </div>
         <div class="step-controls">
             <div class="step-controls-row">
-                <button id="firstStepBtn" class="step-btn" type="button">First Step</button>
-                <button id="prevStepBtn" class="step-btn" type="button">Previous Step</button>
-                <button id="nextStepBtn" class="step-btn" type="button">Next Step</button>
-                <button id="lastStepBtn" class="step-btn" type="button">Last Step</button>
+                <button id="firstStepBtn" class="step-btn" type="button">First Step (Home)</button>
+                <button id="prevStepBtn" class="step-btn" type="button">Previous Step (â†)</button>
+                <button id="nextStepBtn" class="step-btn" type="button">Next Step (â†’)</button>
+                <button id="lastStepBtn" class="step-btn" type="button">Last Step (End)</button>
             </div>
         </div>
         <div id="stepLog" class="step-log">Press Calculate to start step-by-step multiplication.</div>
@@ -757,7 +768,7 @@
         }
         const playBtn = document.getElementById('playBtn');
         playBtn.classList.remove('running');
-        playBtn.textContent = reason === 'pause' ? 'Resume' : 'Start';
+        playBtn.textContent = reason === 'pause' ? 'Resume (Enter)' : 'Start (Enter)';
     }
 
     function updateStepCounter() {
@@ -792,7 +803,7 @@
     function renderStepLog() {
         const stepLog = document.getElementById('stepLog');
         if (!steps.length || currentStepIndex < 0) {
-            stepLog.innerHTML = `<div class="step-log-toolbar"><span></span><div id="stepCounter" class="step-counter">Step 0 of 0</div><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Reverse step order" aria-label="Reverse step order">⇅</button></div>`;
+            stepLog.innerHTML = `<div class="step-log-toolbar"><span></span><div id="stepCounter" class="step-counter">Step 0 of 0</div><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Toggle step order" aria-label="Toggle step order">${isReverseOrder ? 'Descending' : 'Ascending'} <span aria-hidden="true">⇅</span></button></div>`;
             const reverseOrderBtn = document.getElementById('reverseOrderBtn');
             if (reverseOrderBtn) {
                 reverseOrderBtn.addEventListener('click', () => {
@@ -839,7 +850,7 @@
                 const highlightIdx = isReverseOrder ? group.rows.length - 1 : 0;
                 const anchorClass = highlightIdx === 0 ? '' : ' group-last-step-anchor';
                 const groupCells = rowIdx === 0
-                    ? `<td class="group-name-cell${anchorClass}" data-group-key="${groupKey}" rowspan="${group.rows.length}"><span class="group-name-content">R(${group.i + 1}, ${group.j + 1})</span></td><td class="group-result-cell${anchorClass}" data-group-key="${groupKey}" rowspan="${group.rows.length}"><button class="group-result-target" data-group-i="${group.i}" data-group-j="${group.j}" data-group-start-index="${startIndex}" type="button"><span class="group-result-value">${currentGroupValue}</span></button></td>`
+                    ? `<td class="group-name-cell${anchorClass}" data-group-key="${groupKey}" data-group-i="${group.i}" data-group-j="${group.j}" rowspan="${group.rows.length}"><span class="group-name-content">R(${group.i + 1}, ${group.j + 1})</span></td><td class="group-result-cell${anchorClass}" data-group-key="${groupKey}" data-group-i="${group.i}" data-group-j="${group.j}" rowspan="${group.rows.length}"><button class="group-result-target" data-group-i="${group.i}" data-group-j="${group.j}" data-group-start-index="${startIndex}" type="button"><span class="group-result-value">${currentGroupValue}</span></button></td>`
                     : '';
                 const rowClass = [
                     'step-row',
@@ -862,7 +873,7 @@
             }).join('');
         }).join('');
 
-        stepLog.innerHTML = `<div class="step-log-toolbar"><span></span><div id="stepCounter" class="step-counter"></div><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Reverse step order" aria-label="Reverse step order">⇅</button></div><table class="steps-table"><colgroup><col style="width: 11%;"><col style="width: 12%;"><col style="width: 26%;"><col style="width: 20%;"><col style="width: 23%;"><col style="width: 8%;"></colgroup><thead><tr><th>Group</th><th>Result</th><th>Cells</th><th class="mul-col">Multiplication</th><th class="total-col">Running Total</th><th>Step</th></tr></thead><tbody>${tableRows}</tbody></table>`;
+        stepLog.innerHTML = `<div class="step-log-toolbar"><span></span><div id="stepCounter" class="step-counter"></div><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Toggle step order" aria-label="Toggle step order">${isReverseOrder ? 'Descending' : 'Ascending'} <span aria-hidden="true">⇅</span></button></div><table class="steps-table"><colgroup><col style="width: 11%;"><col style="width: 12%;"><col style="width: 26%;"><col style="width: 20%;"><col style="width: 23%;"><col style="width: 8%;"></colgroup><thead><tr><th>Group</th><th>Result</th><th>Cells</th><th class="mul-col">Multiplication</th><th class="total-col">Running Total</th><th>Step</th></tr></thead><tbody>${tableRows}</tbody></table>`;
 
         const reverseOrderBtn = document.getElementById('reverseOrderBtn');
         if (reverseOrderBtn) {
@@ -925,16 +936,6 @@
         });
 
         stepLog.querySelectorAll('.group-result-target').forEach((targetEl) => {
-            targetEl.addEventListener('mouseenter', () => {
-                const groupI = Number.parseInt(targetEl.dataset.groupI, 10);
-                const groupJ = Number.parseInt(targetEl.dataset.groupJ, 10);
-                if (Number.isFinite(groupI) && Number.isFinite(groupJ)) {
-                    renderGroupGuide(groupI, groupJ);
-                }
-            });
-            targetEl.addEventListener('mouseleave', () => {
-                renderMatricesForStep(currentStepIndex, currentStepIndex === steps.length - 1 ? 'none' : 'group');
-            });
             targetEl.addEventListener('click', () => {
                 const startIdx = Number.parseInt(targetEl.dataset.groupStartIndex, 10);
                 if (!Number.isFinite(startIdx)) {
@@ -943,6 +944,37 @@
                 stopContinuous();
                 currentStepIndex = startIdx;
                 renderCurrentStep();
+            });
+        });
+
+        const setGroupPairFocus = (groupKey, isActive) => {
+            if (!groupKey) {
+                return;
+            }
+            stepLog.querySelectorAll(`td[data-group-key="${groupKey}"]`).forEach((cell) => {
+                cell.classList.toggle('group-pair-focus', isActive);
+            });
+        };
+
+        stepLog.querySelectorAll('td.group-name-cell[data-group-key], td.group-result-cell[data-group-key]').forEach((cellEl) => {
+            cellEl.addEventListener('mouseenter', () => {
+                const groupKey = cellEl.dataset.groupKey;
+                const groupI = Number.parseInt(cellEl.dataset.groupI, 10);
+                const groupJ = Number.parseInt(cellEl.dataset.groupJ, 10);
+                setGroupPairFocus(groupKey, true);
+                if (Number.isFinite(groupI) && Number.isFinite(groupJ)) {
+                    renderGroupGuide(groupI, groupJ);
+                    triggerActiveResultPop();
+                }
+            });
+            cellEl.addEventListener('mouseleave', (event) => {
+                const groupKey = cellEl.dataset.groupKey;
+                const related = event.relatedTarget;
+                if (groupKey && related instanceof Element && related.closest(`td[data-group-key="${groupKey}"]`)) {
+                    return;
+                }
+                setGroupPairFocus(groupKey, false);
+                renderMatricesForStep(currentStepIndex, currentStepIndex === steps.length - 1 ? 'none' : 'group');
             });
         });
     }
@@ -1100,9 +1132,14 @@
             return;
         }
 
+        if (isReverseOrder) {
+            isReverseOrder = false;
+            renderStepLog();
+        }
+
         const playBtn = document.getElementById('playBtn');
         playBtn.classList.add('running');
-        playBtn.textContent = 'Stop';
+        playBtn.textContent = 'Stop (Enter)';
 
         runContinuousStep();
         updateStepControls();
@@ -1179,6 +1216,47 @@
     document.getElementById('pauseBtn').addEventListener('click', () => {
         stopContinuous('pause');
         updateStepControls();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) {
+            return;
+        }
+        const target = event.target;
+        const isTypingTarget = target instanceof HTMLElement
+            && (target.matches('input, textarea, select') || target.isContentEditable);
+        if (isTypingTarget) {
+            return;
+        }
+
+        if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            stopContinuous();
+            showNextStep({ animateFinalCell: true });
+            return;
+        }
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            stopContinuous();
+            showPreviousStep();
+            return;
+        }
+        if (event.key === 'Home') {
+            event.preventDefault();
+            stopContinuous();
+            showFirstStep();
+            return;
+        }
+        if (event.key === 'End') {
+            event.preventDefault();
+            stopContinuous();
+            showLastStep();
+            return;
+        }
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            toggleContinuous();
+        }
     });
 
     updateCompatibilityIndicator();
