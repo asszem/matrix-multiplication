@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Multiplication Visualization</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .equation-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .matrix-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .matrix-dimension {
+            margin-bottom: 0.5rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .dimension-input {
+            width: 72px;
+            border: 1px solid #cfd8dc;
+            border-radius: 6px;
+            padding: 4px 6px;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .matrix {
+            display: grid;
+            gap: 5px;
+            padding: 10px;
+            background: #ecf0f1;
+            border-left: 3px solid #34495e;
+            border-right: 3px solid #34495e;
+            border-radius: 8px;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            transition: transform 0.2s;
+        }
+
+        .cell:hover {
+            transform: scale(1.1);
+            background: #e1f5fe;
+        }
+
+        .operator {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .result-matrix .cell {
+            background: #e8f5e9;
+            font-weight: bold;
+            color: #2e7d32;
+            width: 60px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="equation-row">
+        <div class="matrix-container">
+            <div class="matrix-dimension">
+                <input id="dimA" class="dimension-input" type="text" value="3x3" aria-label="Matrix A dimensions">
+            </div>
+            <div class="matrix" id="matrixA"></div>
+        </div>
+
+        <div class="operator">x</div>
+
+        <div class="matrix-container">
+            <div class="matrix-dimension">
+                <input id="dimB" class="dimension-input" type="text" value="3x3" aria-label="Matrix B dimensions">
+            </div>
+            <div class="matrix" id="matrixB"></div>
+        </div>
+
+        <div class="operator">=</div>
+
+        <div class="matrix-container">
+            <div class="matrix-dimension" id="dimResult">3x3</div>
+            <div class="matrix result-matrix" id="matrixResult"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let A = [];
+    let B = [];
+
+    function multiplyMatrices(m1, m2) {
+        const result = [];
+        for (let i = 0; i < m1.length; i++) {
+            result[i] = [];
+            for (let j = 0; j < m2[0].length; j++) {
+                let sum = 0;
+                for (let k = 0; k < m1[0].length; k++) {
+                    sum += m1[i][k] * m2[k][j];
+                }
+                result[i][j] = sum;
+            }
+        }
+        return result;
+    }
+
+    function createMatrix(rows, cols) {
+        return Array.from({ length: rows }, () =>
+            Array.from({ length: cols }, () => Math.floor(Math.random() * 9) + 1)
+        );
+    }
+
+    function parseDimensions(raw) {
+        const match = raw.trim().match(/^(\d+)\s*[xX]\s*(\d+)$/);
+        if (!match) return null;
+
+        const rows = Number(match[1]);
+        const cols = Number(match[2]);
+        if (rows < 1 || cols < 1) return null;
+
+        return { rows, cols };
+    }
+
+    function renderMatrix(matrix, elementId) {
+        const container = document.getElementById(elementId);
+        container.innerHTML = '';
+        container.style.gridTemplateColumns = `repeat(${matrix[0].length}, 1fr)`;
+
+        matrix.flat().forEach((val) => {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.textContent = val;
+            container.appendChild(cell);
+        });
+    }
+
+    function redrawFromInputs() {
+        const dimA = parseDimensions(document.getElementById('dimA').value);
+        const dimB = parseDimensions(document.getElementById('dimB').value);
+
+        if (!dimA || !dimB) {
+            alert('Use format rows x cols, for example 3x4.');
+            return;
+        }
+
+        if (dimA.cols !== dimB.rows) {
+            alert('Matrix A columns must match Matrix B rows.');
+            return;
+        }
+
+        A = createMatrix(dimA.rows, dimA.cols);
+        B = createMatrix(dimB.rows, dimB.cols);
+        const result = multiplyMatrices(A, B);
+
+        renderMatrix(A, 'matrixA');
+        renderMatrix(B, 'matrixB');
+        renderMatrix(result, 'matrixResult');
+        document.getElementById('dimResult').textContent = `${dimA.rows}x${dimB.cols}`;
+    }
+
+    document.querySelectorAll('.dimension-input').forEach((input) => {
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                redrawFromInputs();
+                input.blur();
+            }
+        });
+    });
+
+    redrawFromInputs();
+</script>
+
+</body>
+</html>
