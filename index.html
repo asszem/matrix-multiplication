@@ -27,11 +27,20 @@
             max-width: 1200px;
         }
 
-        .matrix-panel {
+        .page-title {
+            margin: -2rem 0 2rem 0; 
+            font-size: 1.9rem;
+            color: #1f2d3a;
+        }
+
+        .top-area {
             position: sticky;
             top: 0;
             z-index: 10;
             background: white;
+        }
+
+        .matrix-panel {
             padding-bottom: 0.75rem;
             margin-bottom: 0.8rem;
             border-bottom: 1px solid #eceff1;
@@ -163,8 +172,19 @@
         }
 
         .cell.active-result {
-            background: #c8e6c9;
-            box-shadow: 0 0 0 2px #2e7d32 inset;
+            background: #ffe082;
+            box-shadow: 0 0 0 2px #f57f17 inset;
+        }
+
+        .result-matrix .cell.final-pop {
+            animation: final-cell-pop 1.05s ease;
+            transform-origin: center center;
+        }
+
+        @keyframes final-cell-pop {
+            0% { transform: scale(1); }
+            35% { transform: scale(1.22); }
+            100% { transform: scale(1); }
         }
 
         .cell.result-clickable {
@@ -219,12 +239,41 @@
             padding: 0.4rem;
             background: #fafafa;
             margin-bottom: 0.8rem;
+            position: relative;
+        }
+
+        .reverse-order-btn {
+            position: static;
+            width: 32px;
+            height: 32px;
+            border: 1px solid #b0bec5;
+            border-radius: 8px;
+            background: white;
+            color: #455a64;
+            font-size: 1rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step-log-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 0.35rem;
+        }
+
+        .reverse-order-btn.active {
+            background: #e3f2fd;
+            border-color: #64b5f6;
+            color: #1565c0;
         }
 
         .steps-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.9rem;
+            table-layout: fixed;
         }
 
         .steps-table th,
@@ -232,7 +281,8 @@
             border: 1px solid #eceff1;
             padding: 0.35rem 0.45rem;
             background: white;
-            vertical-align: top;
+            vertical-align: middle;
+            text-align: center;
         }
 
         .steps-table th {
@@ -241,17 +291,86 @@
             font-weight: 700;
         }
 
-        .steps-table .group-cell {
+        .steps-table .group-name-cell,
+        .steps-table .group-result-cell {
             white-space: nowrap;
             text-align: center;
+            padding: 0;
+            background: white;
+            position: relative;
+        }
+
+        .steps-table .group-name-cell {
+            min-width: 92px;
+            vertical-align: top;
+        }
+
+        .steps-table .group-result-cell {
+            min-width: 88px;
+        }
+
+        .group-name-content {
+            display: block;
+            padding-top: 6px;
+            font-weight: 700;
+            color: #1b5e20;
+            line-height: 1;
         }
 
         .steps-table tr.group-start td {
-            border-top: 3px solid #cfd8dc;
+            border-top: 3px solid #34495e;
+            box-shadow: 0 -2px 9px rgba(76, 175, 80, 0.24);
+        }
+
+        .steps-table tr.group-end td {
+            border-bottom: 3px solid #34495e;
+            box-shadow: 0 2px 9px rgba(76, 175, 80, 0.24);
+        }
+
+        .steps-table tr.group-start td.group-name-cell,
+        .steps-table tr.group-start td.group-result-cell {
+            border-bottom: 3px solid #34495e;
+        }
+
+        .steps-table tr.group-start td.group-name-cell {
+            border-left: 3px solid #34495e;
+        }
+
+        .steps-table tr.group-row td:last-child {
+            border-right: 3px solid #34495e;
+        }
+
+        .steps-table tr.group-start td:first-child {
+            border-top-left-radius: 10px;
+        }
+
+        .steps-table tr.group-start td:last-child {
+            border-top-right-radius: 10px;
+        }
+
+        .steps-table tr.group-end td:first-child {
+            border-bottom-left-radius: 10px;
+        }
+
+        .steps-table tr.group-end td:last-child {
+            border-bottom-right-radius: 10px;
         }
 
         .step-row {
             cursor: pointer;
+        }
+
+        .steps-table tr.step-row:hover td {
+            background: #f6fbff;
+        }
+
+        .steps-table tr.group-last-step td {
+            background: #f3fff5;
+            font-weight: 700;
+        }
+
+        .steps-table tr.group-last-step:hover td {
+            background: #edf9f0;
         }
 
         .step-pill {
@@ -276,23 +395,67 @@
             color: #1b5e20;
         }
 
-        .step-group-target {
-            border: none;
+        .group-result-target {
+            border: 1px solid transparent;
+            box-sizing: border-box;
             cursor: pointer;
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            color: #1b5e20;
+            border-radius: 0;
+            padding: 0;
+        }
+
+        .group-result-target:hover {
+            border-width: 2px;
+            border-color: #f57f17;
+        }
+
+        .group-result-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.35rem;
+            font-weight: 800;
+            line-height: 1;
+            color: #1b5e20;
+        }
+
+        .steps-table tr.step-row:hover td.group-name-cell,
+        .steps-table tr.step-row:hover td.group-result-cell {
+            background: #f6fbff;
+        }
+
+        .steps-table tr.group-last-step:hover td.group-name-cell,
+        .steps-table tr.group-last-step:hover td.group-result-cell {
+            background: #edf9f0;
         }
 
         .step-controls {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            gap: 0.45rem;
+            margin-top: 0.45rem;
+            margin-bottom: 1rem;
         }
 
         .step-controls-row {
             display: flex;
+            align-items: center;
             justify-content: center;
             gap: 0.6rem;
             flex-wrap: wrap;
+        }
+
+        .step-counter {
+            text-align: center;
+            font-weight: 700;
+            color: #455a64;
+            font-size: 0.95rem;
         }
 
         .step-btn {
@@ -320,8 +483,10 @@
 <body>
 
 <div class="container">
-    <div class="matrix-panel">
-        <div class="equation-layout">
+    <div class="top-area">
+        <h1 class="page-title">Matrix Multiplication</h1>
+        <div class="matrix-panel">
+            <div class="equation-layout">
                 <div class="matrix-dimension dim-a">
                     <div class="dimension-fields">
                         <input id="aRows" class="dimension-input" type="number" min="1" value="3" aria-label="Matrix A rows">
@@ -342,19 +507,22 @@
                 <div class="matrix" id="matrixB"></div>
                 <div class="operator operator-eq">=</div>
                 <div class="matrix result-matrix" id="matrixResult"></div>
+            </div>
         </div>
     </div>
 
     <div class="step-panel">
+        <div class="step-controls-row">
+            <button id="pauseBtn" class="step-btn" type="button">Pause</button>
+            <button id="playBtn" class="step-btn" type="button">Start</button>
+        </div>
+        <div id="stepCounter" class="step-counter">0 of 0</div>
         <div class="step-controls">
             <div class="step-controls-row">
                 <button id="firstStepBtn" class="step-btn" type="button">First Step</button>
                 <button id="prevStepBtn" class="step-btn" type="button">Previous Step</button>
                 <button id="nextStepBtn" class="step-btn" type="button">Next Step</button>
                 <button id="lastStepBtn" class="step-btn" type="button">Last Step</button>
-            </div>
-            <div class="step-controls-row">
-                <button id="continuousBtn" class="step-btn" type="button">Play</button>
             </div>
         </div>
         <div id="stepLog" class="step-log">Press Calculate to start step-by-step multiplication.</div>
@@ -367,8 +535,10 @@
     let steps = [];
     let currentStepIndex = -1;
     let autoTimer = null;
+    let isReverseOrder = false;
 
     const AUTO_DELAY_MS = 800;
+    const FINAL_CELL_HOLD_MS = 2200;
 
     function multiplyMatrices(m1, m2) {
         const result = [];
@@ -528,14 +698,20 @@
         renderCurrentStep();
     }
 
-    function stopContinuous() {
+    function stopContinuous(reason = 'stop') {
         if (autoTimer) {
-            clearInterval(autoTimer);
+            clearTimeout(autoTimer);
             autoTimer = null;
         }
-        const continuousBtn = document.getElementById('continuousBtn');
-        continuousBtn.classList.remove('running');
-        continuousBtn.textContent = 'Play';
+        const playBtn = document.getElementById('playBtn');
+        playBtn.classList.remove('running');
+        playBtn.textContent = reason === 'pause' ? 'Resume' : 'Start';
+    }
+
+    function updateStepCounter() {
+        const current = currentStepIndex >= 0 ? currentStepIndex + 1 : 0;
+        const total = steps.length;
+        document.getElementById('stepCounter').textContent = `Step ${current} of ${total}`;
     }
 
     function updateCompatibilityIndicator() {
@@ -553,20 +729,40 @@
         document.getElementById('prevStepBtn').disabled = !hasSteps || currentStepIndex <= 0;
         document.getElementById('nextStepBtn').disabled = !hasSteps || currentStepIndex >= steps.length - 1;
         document.getElementById('lastStepBtn').disabled = !hasSteps || currentStepIndex >= steps.length - 1;
-        document.getElementById('continuousBtn').disabled = !hasSteps || currentStepIndex >= steps.length - 1;
+        document.getElementById('playBtn').disabled = !hasSteps || currentStepIndex >= steps.length - 1;
+        document.getElementById('pauseBtn').disabled = !autoTimer;
+        updateStepCounter();
     }
 
     function renderStepLog() {
         const stepLog = document.getElementById('stepLog');
         if (!steps.length || currentStepIndex < 0) {
-            stepLog.textContent = 'Press Calculate to start step-by-step multiplication.';
+            stepLog.innerHTML = `<div class="step-log-toolbar"><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Reverse step order" aria-label="Reverse step order">⇅</button></div>`;
+            const reverseOrderBtn = document.getElementById('reverseOrderBtn');
+            if (reverseOrderBtn) {
+                reverseOrderBtn.addEventListener('click', () => {
+                    isReverseOrder = !isReverseOrder;
+                    renderStepLog();
+                });
+            }
             return;
         }
 
         const grouped = [];
         const groupMap = new Map();
 
-        for (let idx = currentStepIndex; idx >= 0; idx--) {
+        const indexes = [];
+        if (isReverseOrder) {
+            for (let idx = 0; idx <= currentStepIndex; idx++) {
+                indexes.push(idx);
+            }
+        } else {
+            for (let idx = currentStepIndex; idx >= 0; idx--) {
+                indexes.push(idx);
+            }
+        }
+
+        indexes.forEach((idx) => {
             const step = steps[idx];
             const key = `${step.i}-${step.j}`;
             if (!groupMap.has(key)) {
@@ -575,22 +771,40 @@
                 grouped.push(group);
             }
             groupMap.get(key).rows.push({ step, idx });
-        }
+        });
 
         const tableRows = grouped.map((group) => {
-            const startIndex = group.rows[group.rows.length - 1].idx;
+            const startIndex = isReverseOrder ? group.rows[0].idx : group.rows[group.rows.length - 1].idx;
             const currentGroupValue = group.rows[0].step.nextSum;
             return group.rows.map((row, rowIdx) => {
                 const step = row.step;
-                const groupCell = rowIdx === 0
-                    ? `<td class="group-cell" rowspan="${group.rows.length}"><button class="step-pill r step-group-target" data-group-i="${group.i}" data-group-j="${group.j}" data-group-start-index="${startIndex}" type="button">R(${group.i + 1}, ${group.j + 1}) = ${currentGroupValue}</button></td>`
+                const groupCells = rowIdx === 0
+                    ? `<td class="group-name-cell" rowspan="${group.rows.length}"><span class="group-name-content">R(${group.i + 1}, ${group.j + 1})</span></td><td class="group-result-cell" rowspan="${group.rows.length}"><button class="group-result-target" data-group-i="${group.i}" data-group-j="${group.j}" data-group-start-index="${startIndex}" type="button"><span class="group-result-value">${currentGroupValue}</span></button></td>`
                     : '';
-                const rowClass = rowIdx === 0 ? 'step-row group-start' : 'step-row';
-                return `<tr class="${rowClass}" data-step-index="${row.idx}">${groupCell}<td>${row.idx + 1}</td><td><span class="step-pill r">R(${step.i + 1}, ${step.j + 1})</span> = ${step.prevSum} + (<span class="step-pill a">A(${step.i + 1}, ${step.k + 1})</span> x <span class="step-pill b">B(${step.k + 1}, ${step.j + 1})</span>) = ${step.prevSum} + (${step.aVal} x ${step.bVal}) = ${step.nextSum}</td></tr>`;
+                const highlightIdx = isReverseOrder ? group.rows.length - 1 : 0;
+                const rowClass = [
+                    'step-row',
+                    'group-row',
+                    rowIdx === 0 ? 'group-start' : '',
+                    rowIdx === group.rows.length - 1 ? 'group-end' : '',
+                    rowIdx === highlightIdx ? 'group-last-step' : ''
+                ].filter(Boolean).join(' ');
+                const cumulative = step.prevSum === 0
+                    ? `${step.nextSum}`
+                    : `${step.prevSum} + ${step.product} = ${step.nextSum}`;
+                return `<tr class="${rowClass}" data-step-index="${row.idx}">${groupCells}<td><span class="step-pill a">A(${step.i + 1}, ${step.k + 1})</span> x <span class="step-pill b">B(${step.k + 1}, ${step.j + 1})</span></td><td>${step.aVal} x ${step.bVal}</td><td>${step.product}</td><td>${cumulative}</td><td>${row.idx + 1}/${steps.length}</td></tr>`;
             }).join('');
         }).join('');
 
-        stepLog.innerHTML = `<table class="steps-table"><thead><tr><th>Result Cell</th><th>Step</th><th>Status</th></tr></thead><tbody>${tableRows}</tbody></table>`;
+        stepLog.innerHTML = `<div class="step-log-toolbar"><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Reverse step order" aria-label="Reverse step order">⇅</button></div><table class="steps-table"><colgroup><col style="width: 11%;"><col style="width: 12%;"><col style="width: 24%;"><col style="width: 14%;"><col style="width: 10%;"><col style="width: 21%;"><col style="width: 8%;"></colgroup><thead><tr><th>Group</th><th>Result</th><th>Cells</th><th>Numbers</th><th>Product</th><th>Running Total</th><th>Step</th></tr></thead><tbody>${tableRows}</tbody></table>`;
+
+        const reverseOrderBtn = document.getElementById('reverseOrderBtn');
+        if (reverseOrderBtn) {
+            reverseOrderBtn.addEventListener('click', () => {
+                isReverseOrder = !isReverseOrder;
+                renderStepLog();
+            });
+        }
 
         stepLog.querySelectorAll('tr.step-row').forEach((rowEl) => {
             rowEl.addEventListener('mouseenter', () => {
@@ -604,7 +818,34 @@
             });
         });
 
-        stepLog.querySelectorAll('.step-group-target').forEach((targetEl) => {
+        stepLog.querySelectorAll('tr.step-row td:last-child').forEach((stepCellEl) => {
+            stepCellEl.addEventListener('mouseenter', () => {
+                const rowEl = stepCellEl.closest('tr.step-row');
+                if (!rowEl) {
+                    return;
+                }
+                const stepIdx = Number.parseInt(rowEl.dataset.stepIndex, 10);
+                if (!Number.isFinite(stepIdx) || !steps[stepIdx]) {
+                    return;
+                }
+                renderGroupGuide(steps[stepIdx].i, steps[stepIdx].j);
+            });
+            stepCellEl.addEventListener('mouseleave', () => {
+                const rowEl = stepCellEl.closest('tr.step-row');
+                if (!rowEl) {
+                    renderMatricesForStep(currentStepIndex, currentStepIndex === steps.length - 1 ? 'none' : 'group');
+                    return;
+                }
+                const stepIdx = Number.parseInt(rowEl.dataset.stepIndex, 10);
+                if (Number.isFinite(stepIdx)) {
+                    renderMatricesForStep(stepIdx, 'group');
+                } else {
+                    renderMatricesForStep(currentStepIndex, currentStepIndex === steps.length - 1 ? 'none' : 'group');
+                }
+            });
+        });
+
+        stepLog.querySelectorAll('.group-result-target').forEach((targetEl) => {
             targetEl.addEventListener('mouseenter', () => {
                 const groupI = Number.parseInt(targetEl.dataset.groupI, 10);
                 const groupJ = Number.parseInt(targetEl.dataset.groupJ, 10);
@@ -698,6 +939,16 @@
         updateStepControls();
     }
 
+    function triggerActiveResultPop() {
+        const activeResultCell = document.querySelector('#matrixResult .cell.active-result');
+        if (!activeResultCell) {
+            return;
+        }
+        activeResultCell.classList.remove('final-pop');
+        void activeResultCell.offsetWidth;
+        activeResultCell.classList.add('final-pop');
+    }
+
     function calculateAndPrepareSteps() {
         const dims = getDimensions();
         if (dims.aCols !== dims.bRows) {
@@ -723,10 +974,14 @@
         updateCompatibilityIndicator();
     }
 
-    function showNextStep() {
+    function showNextStep(options = {}) {
+        const animateFinalCell = Boolean(options.animateFinalCell);
         if (currentStepIndex < steps.length - 1) {
             currentStepIndex += 1;
             renderCurrentStep();
+            if (animateFinalCell && steps[currentStepIndex] && steps[currentStepIndex].isLastForCell) {
+                triggerActiveResultPop();
+            }
         } else {
             stopContinuous();
         }
@@ -760,26 +1015,57 @@
             return;
         }
 
-        const continuousBtn = document.getElementById('continuousBtn');
-
         if (autoTimer) {
             stopContinuous();
+            updateStepControls();
             return;
         }
 
-        continuousBtn.classList.add('running');
-        continuousBtn.textContent = 'Stop';
+        const playBtn = document.getElementById('playBtn');
+        playBtn.classList.add('running');
+        playBtn.textContent = 'Stop';
 
-        autoTimer = setInterval(() => {
-            if (currentStepIndex >= steps.length - 1) {
-                stopContinuous();
-                return;
+        runContinuousStep();
+        updateStepControls();
+    }
+
+    function runContinuousStep() {
+        if (!autoTimer && !document.getElementById('playBtn').classList.contains('running')) {
+            return;
+        }
+
+        if (currentStepIndex >= steps.length - 1) {
+            stopContinuous();
+            updateStepControls();
+            return;
+        }
+
+        showNextStep();
+        const step = steps[currentStepIndex];
+        let delay = AUTO_DELAY_MS;
+
+        if (step && step.isLastForCell) {
+            if (currentStepIndex === steps.length - 1) {
+                renderMatricesForStep(currentStepIndex, 'group');
             }
-            showNextStep();
-            if (currentStepIndex >= steps.length - 1) {
+            triggerActiveResultPop();
+            delay = FINAL_CELL_HOLD_MS;
+        }
+
+        if (currentStepIndex >= steps.length - 1) {
+            autoTimer = setTimeout(() => {
+                renderMatricesForStep(currentStepIndex, 'none');
                 stopContinuous();
-            }
-        }, AUTO_DELAY_MS);
+                updateStepControls();
+            }, delay);
+            return;
+        }
+
+        autoTimer = setTimeout(() => {
+            autoTimer = null;
+            runContinuousStep();
+        }, delay);
+        updateStepControls();
     }
 
     document.querySelectorAll('.dimension-input').forEach((input) => {
@@ -800,7 +1086,7 @@
     });
     document.getElementById('nextStepBtn').addEventListener('click', () => {
         stopContinuous();
-        showNextStep();
+        showNextStep({ animateFinalCell: true });
     });
     document.getElementById('prevStepBtn').addEventListener('click', () => {
         stopContinuous();
@@ -810,7 +1096,11 @@
         stopContinuous();
         showLastStep();
     });
-    document.getElementById('continuousBtn').addEventListener('click', toggleContinuous);
+    document.getElementById('playBtn').addEventListener('click', toggleContinuous);
+    document.getElementById('pauseBtn').addEventListener('click', () => {
+        stopContinuous('pause');
+        updateStepControls();
+    });
 
     updateCompatibilityIndicator();
     calculateAndPrepareSteps();
