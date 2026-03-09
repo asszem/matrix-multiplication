@@ -295,6 +295,40 @@
             text-align: center;
         }
 
+        .steps-table td.mul-col,
+        .steps-table td.total-col,
+        .steps-table th.mul-col,
+        .steps-table th.total-col {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .steps-table td.mul-col,
+        .steps-table td.total-col {
+            padding-top: 0;
+            padding-bottom: 0;
+            padding-right: 1.15rem;
+        }
+
+        .steps-table th.mul-col,
+        .steps-table th.total-col {
+            text-align: center;
+        }
+
+        .steps-table .right-mid {
+            min-height: 2.05rem;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .steps-table .right-mid .right-val {
+            display: inline-block;
+            min-width: 13ch;
+            text-align: right;
+        }
+
         .steps-table th {
             background: #f1f5f8;
             color: #455a64;
@@ -306,7 +340,7 @@
             white-space: nowrap;
             text-align: center;
             padding: 0;
-            background: white;
+            background-color: transparent;
             position: relative;
         }
 
@@ -379,7 +413,16 @@
             font-weight: 700;
         }
 
+        .steps-table td.group-last-step-anchor {
+            background: #f3fff5;
+            font-weight: 700;
+        }
+
         .steps-table tr.group-last-step:hover td {
+            background: #edf9f0;
+        }
+
+        .steps-table td.group-hover-linked {
             background: #edf9f0;
         }
 
@@ -411,7 +454,7 @@
             cursor: pointer;
             position: absolute;
             inset: 0;
-            background: transparent;
+            background-color: transparent;
             color: #1b5e20;
             border-radius: 0;
             padding: 0;
@@ -544,7 +587,7 @@
     let steps = [];
     let currentStepIndex = -1;
     let autoTimer = null;
-    let isReverseOrder = false;
+    let isReverseOrder = true;
 
     const AUTO_DELAY_MS = 800;
     const FINAL_CELL_HOLD_MS = 2200;
@@ -790,12 +833,14 @@
             const currentGroupValue = isReverseOrder
                 ? group.rows[group.rows.length - 1].step.nextSum
                 : group.rows[0].step.nextSum;
+            const groupKey = `${group.i}-${group.j}`;
             return group.rows.map((row, rowIdx) => {
                 const step = row.step;
-                const groupCells = rowIdx === 0
-                    ? `<td class="group-name-cell" rowspan="${group.rows.length}"><span class="group-name-content">R(${group.i + 1}, ${group.j + 1})</span></td><td class="group-result-cell" rowspan="${group.rows.length}"><button class="group-result-target" data-group-i="${group.i}" data-group-j="${group.j}" data-group-start-index="${startIndex}" type="button"><span class="group-result-value">${currentGroupValue}</span></button></td>`
-                    : '';
                 const highlightIdx = isReverseOrder ? group.rows.length - 1 : 0;
+                const anchorClass = highlightIdx === 0 ? '' : ' group-last-step-anchor';
+                const groupCells = rowIdx === 0
+                    ? `<td class="group-name-cell${anchorClass}" data-group-key="${groupKey}" rowspan="${group.rows.length}"><span class="group-name-content">R(${group.i + 1}, ${group.j + 1})</span></td><td class="group-result-cell${anchorClass}" data-group-key="${groupKey}" rowspan="${group.rows.length}"><button class="group-result-target" data-group-i="${group.i}" data-group-j="${group.j}" data-group-start-index="${startIndex}" type="button"><span class="group-result-value">${currentGroupValue}</span></button></td>`
+                    : '';
                 const rowClass = [
                     'step-row',
                     'group-row',
@@ -813,11 +858,11 @@
                 const cumulative = terms.length > 0
                     ? (terms.length === 1 ? `${step.nextSum}` : `${terms.join(' + ')} = ${step.nextSum}`)
                     : `${step.nextSum}`;
-                return `<tr class="${rowClass}" data-step-index="${row.idx}">${groupCells}<td><span class="step-pill a">A(${step.i + 1}, ${step.k + 1})</span> x <span class="step-pill b">B(${step.k + 1}, ${step.j + 1})</span></td><td>${step.aVal} x ${step.bVal}</td><td>${step.product}</td><td>${cumulative}</td><td>${row.idx + 1}/${steps.length}</td></tr>`;
+                return `<tr class="${rowClass}" data-step-index="${row.idx}" data-group-key="${groupKey}">${groupCells}<td><span class="step-pill a">A(${step.i + 1}, ${step.k + 1})</span> x <span class="step-pill b">B(${step.k + 1}, ${step.j + 1})</span></td><td class="mul-col"><span class="right-mid"><span class="right-val">${step.aVal} x ${step.bVal} = ${step.product}</span></span></td><td class="total-col"><span class="right-mid"><span class="right-val">${cumulative}</span></span></td><td>${row.idx + 1}/${steps.length}</td></tr>`;
             }).join('');
         }).join('');
 
-        stepLog.innerHTML = `<div class="step-log-toolbar"><span></span><div id="stepCounter" class="step-counter"></div><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Reverse step order" aria-label="Reverse step order">⇅</button></div><table class="steps-table"><colgroup><col style="width: 11%;"><col style="width: 12%;"><col style="width: 24%;"><col style="width: 14%;"><col style="width: 10%;"><col style="width: 21%;"><col style="width: 8%;"></colgroup><thead><tr><th>Group</th><th>Result</th><th>Cells</th><th>Numbers</th><th>Product</th><th>Running Total</th><th>Step</th></tr></thead><tbody>${tableRows}</tbody></table>`;
+        stepLog.innerHTML = `<div class="step-log-toolbar"><span></span><div id="stepCounter" class="step-counter"></div><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Reverse step order" aria-label="Reverse step order">⇅</button></div><table class="steps-table"><colgroup><col style="width: 11%;"><col style="width: 12%;"><col style="width: 26%;"><col style="width: 20%;"><col style="width: 23%;"><col style="width: 8%;"></colgroup><thead><tr><th>Group</th><th>Result</th><th>Cells</th><th class="mul-col">Multiplication</th><th class="total-col">Running Total</th><th>Step</th></tr></thead><tbody>${tableRows}</tbody></table>`;
 
         const reverseOrderBtn = document.getElementById('reverseOrderBtn');
         if (reverseOrderBtn) {
@@ -831,11 +876,23 @@
         stepLog.querySelectorAll('tr.step-row').forEach((rowEl) => {
             rowEl.addEventListener('mouseenter', () => {
                 const stepIdx = Number.parseInt(rowEl.dataset.stepIndex, 10);
+                const groupKey = rowEl.dataset.groupKey;
+                if (groupKey) {
+                    stepLog.querySelectorAll(`td[data-group-key="${groupKey}"]`).forEach((cell) => {
+                        cell.classList.add('group-hover-linked');
+                    });
+                }
                 if (Number.isFinite(stepIdx)) {
                     renderMatricesForStep(stepIdx, 'group');
                 }
             });
             rowEl.addEventListener('mouseleave', () => {
+                const groupKey = rowEl.dataset.groupKey;
+                if (groupKey) {
+                    stepLog.querySelectorAll(`td[data-group-key="${groupKey}"]`).forEach((cell) => {
+                        cell.classList.remove('group-hover-linked');
+                    });
+                }
                 renderMatricesForStep(currentStepIndex, currentStepIndex === steps.length - 1 ? 'none' : 'group');
             });
         });
