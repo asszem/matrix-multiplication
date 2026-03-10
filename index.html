@@ -455,6 +455,11 @@
             color: #1b5e20;
         }
 
+        .step-pill.r-work {
+            background: linear-gradient(180deg, #dff8e4 0%, #b7e7c2 100%);
+            color: #1b5e20;
+        }
+
         .group-result-target {
             border: 1px solid transparent;
             box-sizing: border-box;
@@ -514,6 +519,18 @@
             flex-wrap: wrap;
         }
 
+        .playback-controls-row {
+            justify-content: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #playBtn {
+            background: #e3f2fd;
+            border-color: #90caf9;
+            color: #1565c0;
+        }
+
         .step-counter {
             text-align: center;
             font-weight: 700;
@@ -548,9 +565,49 @@
         }
 
         .step-btn.running {
-            background: #d32f2f;
-            color: white;
-            border-color: #b71c1c;
+            background: #c8e6c9;
+            color: #1b5e20;
+            border-color: #81c784;
+        }
+
+        .current-step-window {
+            width: min(980px, 100%);
+            margin: 0 auto 0.8rem;
+            border: 1px solid #d7dee2;
+            border-radius: 10px;
+            background: #f8fbfd;
+            padding: 0.55rem 0.8rem;
+            box-sizing: border-box;
+        }
+
+        .current-step-title {
+            margin: 0 0 0.2rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #607d8b;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+        }
+
+        .current-step-text {
+            margin: 0;
+            min-height: 1.35rem;
+            color: #263238;
+            font-size: 0.95rem;
+            font-variant-numeric: tabular-nums;
+            text-align: center;
+            white-space: nowrap;
+            overflow-x: auto;
+        }
+
+        .current-step-number {
+            font-size: 0.9rem;
+            color: #455a64;
+            font-variant-numeric: tabular-nums;
         }
 
         .error-modal {
@@ -673,20 +730,20 @@
     </div>
 
     <div class="step-panel">
-        <div class="step-controls-row">
-            <button id="pauseBtn" class="step-btn" type="button">Pause</button>
-            <button id="playBtn" class="step-btn" type="button">Start (Enter)</button>
+        <div id="currentStepWindow" class="current-step-window">
+            <p class="current-step-title">Current Step <span id="currentStepNumber" class="current-step-number">0 / 0</span></p>
+            <p id="currentStepText" class="current-step-text"></p>
         </div>
         <div class="step-controls">
             <div class="step-controls-row">
                 <button id="firstStepBtn" class="step-btn" type="button">First Step (Home)</button>
                 <button id="prevStepBtn" class="step-btn" type="button">Previous Step (&larr;)</button>
-                <span id="inlineStepCounter" class="inline-step-counter">0 / 0</span>
+                <button id="playBtn" class="step-btn" type="button">Start (Enter)</button>
                 <button id="nextStepBtn" class="step-btn" type="button">Next Step (&rarr;)</button>
                 <button id="lastStepBtn" class="step-btn" type="button">Last Step (End)</button>
             </div>
         </div>
-        <div id="stepLog" class="step-log">Press Calculate to start step-by-step multiplication.</div>
+        <div id="stepLog" class="step-log"></div>
     </div>
 </div>
 
@@ -715,10 +772,15 @@
     let autoTimer = null;
     let isReverseOrder = true;
     let lastValidDims = { aRows: 3, aCols: 3, bRows: 3, bCols: 3 };
+    let playbackPhaseTimers = [];
+    let wasPaused = false;
+    let resumeMode = 'next';
     const HIDE_INNER_NOTICE_COOKIE = 'hide_inner_dim_notice';
 
     const AUTO_DELAY_MS = 800;
     const FINAL_CELL_HOLD_MS = 2200;
+    const PLAYBACK_PHASE_DELAY_MS = 450;
+    const PLAYBACK_SUM_HOLD_MS = 520;
 
     function multiplyMatrices(m1, m2) {
         const result = [];
@@ -974,26 +1036,121 @@
         renderCurrentStep();
     }
 
+    function isPlaybackRunning() {
+        const playBtn = document.getElementById('playBtn');
+        return Boolean(playBtn && playBtn.classList.contains('running'));
+    }
+
+    function clearPlaybackPhaseTimers() {
+        playbackPhaseTimers.forEach((timerId) => clearTimeout(timerId));
+        playbackPhaseTimers = [];
+    }
+
+    function setCurrentStepText(text) {
+        const el = document.getElementById('currentStepText');
+        if (el) {
+            el.innerHTML = text;
+        }
+    }
+
+    function setCurrentStepNumber(stepIndex) {
+        const el = document.getElementById('currentStepNumber');
+        if (!el) {
+            return;
+        }
+        if (!steps.length) {
+            el.textContent = '0 / 0';
+            return;
+        }
+        if (stepIndex < 0) {
+            el.textContent = `0 / ${steps.length}`;
+            return;
+        }
+        el.textContent = `${stepIndex + 1} / ${steps.length}`;
+    }
+
+    function getStepNarration(step) {
+        if (!step) {
+            return {
+                line1: '',
+                line2: '',
+                line3: ''
+            };
+        }
+        const rCell = `<span class="step-pill r">R(${step.i + 1}, ${step.j + 1})</span>`;
+        const aCell = `<span class="step-pill a">A(${step.i + 1}, ${step.k + 1})</span>`;
+        const bCell = `<span class="step-pill b">B(${step.k + 1}, ${step.j + 1})</span>`;
+        const aVal = `<span class="step-pill a">${step.aVal}</span>`;
+        const bVal = `<span class="step-pill b">${step.bVal}</span>`;
+        const productVal = `<span class="step-pill r-work"><strong>${step.product}</strong></span>`;
+        const prevTotalVal = `<span class="step-pill r-work">${step.prevSum}</span>`;
+        const nextTotalVal = `<span class="step-pill r-work"><strong>${step.nextSum}</strong></span>`;
+        const base = `Updating ${rCell} by multiplying ${aCell} and ${bCell}`;
+        const line1 = `${base}`;
+        const line2 = `${base} → ${aVal} x ${bVal} = ${productVal}`;
+        const line3 = `${base} → ${aVal} x ${bVal} = ${productVal} and adding result to the running total → ${prevTotalVal} + ${productVal} = ${nextTotalVal}.`;
+        return { line1, line2, line3 };
+    }
+
+    function renderCurrentStepWindow(stepIndex) {
+        if (!steps.length || stepIndex < 0 || !steps[stepIndex]) {
+            setCurrentStepNumber(-1);
+            setCurrentStepText('');
+            return;
+        }
+        setCurrentStepNumber(stepIndex);
+        const step = steps[stepIndex];
+        const { line1, line2, line3 } = getStepNarration(step);
+        setCurrentStepText(line3);
+    }
+
+    function runPlaybackStepNarration(step, done) {
+        clearPlaybackPhaseTimers();
+        if (!step) {
+            done();
+            return;
+        }
+        const { line1, line2, line3 } = getStepNarration(step);
+        setCurrentStepNumber(currentStepIndex);
+        setCurrentStepText(line1);
+        playbackPhaseTimers.push(setTimeout(() => {
+            setCurrentStepText(line2);
+        }, PLAYBACK_PHASE_DELAY_MS));
+        playbackPhaseTimers.push(setTimeout(() => {
+            setCurrentStepText(line3);
+        }, PLAYBACK_PHASE_DELAY_MS * 2));
+        playbackPhaseTimers.push(setTimeout(() => {
+            done();
+        }, (PLAYBACK_PHASE_DELAY_MS * 2) + PLAYBACK_SUM_HOLD_MS));
+    }
+
     function stopContinuous(reason = 'stop') {
+        const hadAutoTimer = Boolean(autoTimer);
+        const hadPhaseTimers = playbackPhaseTimers.length > 0;
         if (autoTimer) {
             clearTimeout(autoTimer);
             autoTimer = null;
         }
+        clearPlaybackPhaseTimers();
         const playBtn = document.getElementById('playBtn');
         playBtn.classList.remove('running');
-        playBtn.textContent = reason === 'pause' ? 'Resume (Enter)' : 'Start (Enter)';
+        if (reason === 'pause') {
+            wasPaused = true;
+            resumeMode = hadPhaseTimers ? 'current' : 'next';
+            playBtn.textContent = 'Resume (Enter)';
+        } else {
+            wasPaused = false;
+            resumeMode = hadAutoTimer ? 'next' : resumeMode;
+            playBtn.textContent = 'Start (Enter)';
+        }
     }
 
     function updateStepCounter() {
         const current = currentStepIndex >= 0 ? currentStepIndex + 1 : 0;
         const total = steps.length;
         const counterEl = document.getElementById('stepCounter');
-        const inlineCounterEl = document.getElementById('inlineStepCounter');
         if (counterEl) {
             counterEl.textContent = `Step ${current} of ${total}`;
-        }
-        if (inlineCounterEl) {
-            inlineCounterEl.textContent = `${current} / ${total}`;
         }
     }
 
@@ -1013,7 +1170,6 @@
         document.getElementById('nextStepBtn').disabled = !hasSteps || currentStepIndex >= steps.length - 1;
         document.getElementById('lastStepBtn').disabled = !hasSteps || currentStepIndex >= steps.length - 1;
         document.getElementById('playBtn').disabled = !hasSteps || currentStepIndex >= steps.length - 1;
-        document.getElementById('pauseBtn').disabled = !autoTimer;
         updateStepCounter();
     }
 
@@ -1083,10 +1239,15 @@
                         terms.push(t.product);
                     }
                 }
+                const aValText = `<span class="step-pill a">${step.aVal}</span>`;
+                const bValText = `<span class="step-pill b">${step.bVal}</span>`;
+                const productText = `<span class="step-pill r-work">${step.product}</span>`;
                 const cumulative = terms.length > 0
-                    ? (terms.length === 1 ? `${step.nextSum}` : `${terms.join(' + ')} = ${step.nextSum}`)
-                    : `${step.nextSum}`;
-                return `<tr class="${rowClass}" data-step-index="${row.idx}" data-group-key="${groupKey}">${groupCells}<td><span class="step-pill a">A(${step.i + 1}, ${step.k + 1})</span> x <span class="step-pill b">B(${step.k + 1}, ${step.j + 1})</span></td><td class="mul-col"><span class="right-mid"><span class="right-val">${step.aVal} x ${step.bVal} = ${step.product}</span></span></td><td class="total-col"><span class="right-mid"><span class="right-val">${cumulative}</span></span></td><td>${row.idx + 1}/${steps.length}</td></tr>`;
+                    ? (terms.length === 1
+                        ? `<span class="step-pill r-work">${step.nextSum}</span>`
+                        : `${terms.map((v) => `<span class="step-pill r-work">${v}</span>`).join(' + ')} = <span class="step-pill r-work">${step.nextSum}</span>`)
+                    : `<span class="step-pill r-work">${step.nextSum}</span>`;
+                return `<tr class="${rowClass}" data-step-index="${row.idx}" data-group-key="${groupKey}">${groupCells}<td><span class="step-pill a">A(${step.i + 1}, ${step.k + 1})</span> x <span class="step-pill b">B(${step.k + 1}, ${step.j + 1})</span></td><td class="mul-col"><span class="right-mid"><span class="right-val">${aValText} x ${bValText} = ${productText}</span></span></td><td class="total-col"><span class="right-mid"><span class="right-val">${cumulative}</span></span></td><td>${row.idx + 1}/${steps.length}</td></tr>`;
             }).join('');
         }).join('');
 
@@ -1257,12 +1418,16 @@
     function renderCurrentStep() {
         if (!steps.length || currentStepIndex < 0) {
             renderMatricesForStep(-1, 'none');
+            renderCurrentStepWindow(-1);
             renderStepLog();
             updateStepControls();
             return;
         }
 
         renderMatricesForStep(currentStepIndex, currentStepIndex === steps.length - 1 ? 'none' : 'group');
+        if (!isPlaybackRunning()) {
+            renderCurrentStepWindow(currentStepIndex);
+        }
         renderStepLog();
         updateStepControls();
     }
@@ -1300,6 +1465,8 @@
         } else {
             currentStepIndex = -1;
         }
+        setCurrentStepText('');
+        setCurrentStepNumber(-1);
 
         renderCurrentStep();
         updateCompatibilityIndicator();
@@ -1346,8 +1513,8 @@
             return;
         }
 
-        if (autoTimer) {
-            stopContinuous();
+        if (isPlaybackRunning()) {
+            stopContinuous('pause');
             updateStepControls();
             return;
         }
@@ -1359,9 +1526,15 @@
 
         const playBtn = document.getElementById('playBtn');
         playBtn.classList.add('running');
-        playBtn.textContent = 'Stop (Enter)';
+        playBtn.textContent = 'Pause (Enter)';
 
-        runContinuousStep();
+        if (wasPaused && resumeMode === 'current' && currentStepIndex >= 0 && steps[currentStepIndex]) {
+            wasPaused = false;
+            continueAfterStepNarration(steps[currentStepIndex]);
+        } else {
+            wasPaused = false;
+            runContinuousStep();
+        }
         updateStepControls();
     }
 
@@ -1378,30 +1551,38 @@
 
         showNextStep();
         const step = steps[currentStepIndex];
-        let delay = AUTO_DELAY_MS;
+        continueAfterStepNarration(step);
+    }
 
-        if (step && step.isLastForCell) {
-            if (currentStepIndex === steps.length - 1) {
-                renderMatricesForStep(currentStepIndex, 'group');
+    function continueAfterStepNarration(step) {
+        runPlaybackStepNarration(step, () => {
+            if (!isPlaybackRunning()) {
+                return;
             }
-            triggerActiveResultPop();
-            delay = FINAL_CELL_HOLD_MS;
-        }
+            let delay = AUTO_DELAY_MS;
+            if (step && step.isLastForCell) {
+                if (currentStepIndex === steps.length - 1) {
+                    renderMatricesForStep(currentStepIndex, 'group');
+                }
+                triggerActiveResultPop();
+                delay = FINAL_CELL_HOLD_MS;
+            }
 
-        if (currentStepIndex >= steps.length - 1) {
+            if (currentStepIndex >= steps.length - 1) {
+                autoTimer = setTimeout(() => {
+                    renderMatricesForStep(currentStepIndex, 'none');
+                    stopContinuous();
+                    updateStepControls();
+                }, delay);
+                return;
+            }
+
             autoTimer = setTimeout(() => {
-                renderMatricesForStep(currentStepIndex, 'none');
-                stopContinuous();
-                updateStepControls();
+                autoTimer = null;
+                runContinuousStep();
             }, delay);
-            return;
-        }
-
-        autoTimer = setTimeout(() => {
-            autoTimer = null;
-            runContinuousStep();
-        }, delay);
-        updateStepControls();
+            updateStepControls();
+        });
     }
 
     document.querySelectorAll('.dimension-input').forEach((input) => {
@@ -1447,10 +1628,6 @@
         showLastStep();
     });
     document.getElementById('playBtn').addEventListener('click', toggleContinuous);
-    document.getElementById('pauseBtn').addEventListener('click', () => {
-        stopContinuous('pause');
-        updateStepControls();
-    });
 
     document.addEventListener('keydown', (event) => {
         if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) {
