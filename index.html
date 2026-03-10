@@ -121,6 +121,10 @@
             border-left: 3px solid #34495e;
             border-right: 3px solid #34495e;
             border-radius: 8px;
+            width: max-content;
+            height: max-content;
+            justify-self: center;
+            align-self: center;
         }
 
         #matrixA {
@@ -432,6 +436,10 @@
 
         .steps-table tr.step-row:hover td {
             background: inherit;
+        }
+
+        .step-log:not(.playback-locked) .steps-table tr.step-row:hover td {
+            background: rgba(34, 52, 66, 0.45);
         }
 
         .steps-table tr.group-last-step td {
@@ -2091,7 +2099,10 @@
         }
 
     document.querySelectorAll('.dimension-input').forEach((input) => {
-        input.addEventListener('input', () => {
+        input.addEventListener('focus', () => {
+            input.select();
+        });
+        input.addEventListener('blur', () => {
             handleDimensionChange(input);
         });
         input.addEventListener('keydown', (event) => {
