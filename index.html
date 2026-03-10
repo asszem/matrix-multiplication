@@ -185,7 +185,7 @@
         }
 
         .result-matrix .cell.final-pop {
-            animation: final-cell-pop 1.05s ease;
+            animation: final-cell-pop 0.9s ease;
             transform-origin: center center;
         }
 
@@ -501,6 +501,10 @@
             box-shadow: inset 0 0 0 2px #f57f17;
         }
 
+        .step-log.playback-locked .steps-table tbody {
+            pointer-events: none;
+        }
+
         .group-result-value {
             position: absolute;
             top: 50%;
@@ -584,6 +588,21 @@
             cursor: pointer;
         }
 
+        .step-btn.multiline {
+            white-space: normal;
+            line-height: 1.2;
+            text-align: center;
+            padding-top: 0.38rem;
+            padding-bottom: 0.38rem;
+        }
+
+        .step-btn.multiline .subline {
+            display: block;
+            font-size: 0.78rem;
+            opacity: 0.9;
+            margin-top: 0.12rem;
+        }
+
         .step-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -593,6 +612,11 @@
             background: #c8e6c9;
             color: #1b5e20;
             border-color: #81c784;
+        }
+
+        .step-btn.speed-flash {
+            box-shadow: 0 0 0 2px #8ec5ff inset, 0 0 14px rgba(120, 180, 255, 0.45);
+            transform: translateY(-1px);
         }
 
         .current-step-window {
@@ -620,13 +644,43 @@
 
         .current-step-text {
             margin: 0;
-            min-height: 1.35rem;
+            min-height: 3rem;
+            line-height: 1.5;
+            padding-top: 0.25rem;
             color: #263238;
             font-size: 0.95rem;
             font-variant-numeric: tabular-nums;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             white-space: nowrap;
-            overflow-x: auto;
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+
+        .current-step-text .step-pill {
+            margin-left: 0.12rem;
+            margin-right: 0.12rem;
+        }
+
+        .step-segment {
+            display: inline-block;
+            transition: opacity 0.2s ease;
+        }
+
+        .step-segment.pending {
+            opacity: 0.55;
+        }
+
+        .step-segment.bump {
+            animation: step-segment-bump 0.95s ease;
+        }
+
+        @keyframes step-segment-bump {
+            0% { transform: scale(1); }
+            20% { transform: scale(1.08); }
+            100% { transform: scale(1); }
         }
 
         .current-step-number {
@@ -1058,8 +1112,21 @@
 
     const AUTO_DELAY_MS = 800;
     const FINAL_CELL_HOLD_MS = 2200;
-    const PLAYBACK_PHASE_DELAY_MS = 450;
-    const PLAYBACK_SUM_HOLD_MS = 520;
+    const PLAYBACK_PHASE_DELAY_MS = 650;
+    const PLAYBACK_SUM_HOLD_MS = 320;
+    let playbackSpeedMultiplier = 1;
+
+    function scaledDelay(ms) {
+        return Math.max(60, Math.round(ms * playbackSpeedMultiplier));
+    }
+
+    function increasePlaybackSpeed() {
+        playbackSpeedMultiplier = Math.max(0.35, +(playbackSpeedMultiplier - 0.1).toFixed(2));
+    }
+
+    function decreasePlaybackSpeed() {
+        playbackSpeedMultiplier = Math.min(3, +(playbackSpeedMultiplier + 0.1).toFixed(2));
+    }
 
     function multiplyMatrices(m1, m2) {
         const result = [];
@@ -1320,9 +1387,54 @@
         return Boolean(playBtn && playBtn.classList.contains('running'));
     }
 
+    function setPlayButtonLabel(state) {
+        const playBtn = document.getElementById('playBtn');
+        if (!playBtn) {
+            return;
+        }
+        if (state === 'running') {
+            playBtn.classList.add('multiline');
+            playBtn.innerHTML = `Pause (Enter)<span class="subline">Faster ↑  Slower ↓</span>`;
+            return;
+        }
+        if (state === 'paused') {
+            playBtn.classList.add('multiline');
+            playBtn.innerHTML = `Resume (Enter)<span class="subline">Faster ↑  Slower ↓</span>`;
+            return;
+        }
+        playBtn.classList.remove('multiline');
+        playBtn.textContent = 'Start (Enter)';
+    }
+
+    function flashPlaySpeedHint() {
+        const playBtn = document.getElementById('playBtn');
+        if (!playBtn || !isPlaybackRunning()) {
+            return;
+        }
+        playBtn.classList.remove('speed-flash');
+        void playBtn.offsetWidth;
+        playBtn.classList.add('speed-flash');
+        setTimeout(() => {
+            playBtn.classList.remove('speed-flash');
+        }, 240);
+    }
+
     function clearPlaybackPhaseTimers() {
         playbackPhaseTimers.forEach((timerId) => clearTimeout(timerId));
         playbackPhaseTimers = [];
+    }
+
+    function setStepLogPlaybackLocked(isLocked) {
+        const stepLog = document.getElementById('stepLog');
+        if (!stepLog) {
+            return;
+        }
+        stepLog.classList.toggle('playback-locked', Boolean(isLocked));
+        if (isLocked) {
+            stepLog.querySelectorAll('.group-hover-linked, .group-pair-focus').forEach((el) => {
+                el.classList.remove('group-hover-linked', 'group-pair-focus');
+            });
+        }
     }
 
     function setCurrentStepText(text) {
@@ -1353,7 +1465,8 @@
             return {
                 line1: '',
                 line2: '',
-                line3: ''
+                line3: '',
+                phaseText: () => ''
             };
         }
         const rCell = `<span class="step-pill r">R(${step.i + 1},${step.j + 1})</span>`;
@@ -1368,7 +1481,14 @@
         const line1 = `${base}`;
         const line2 = `${base} yields ${aVal}×${bVal}=${productVal}`;
         const line3 = `${base} yields ${aVal}×${bVal}=${productVal}; adding this to the running total results in ${prevTotalVal}+${productVal}=${nextTotalVal}.`;
-        return { line1, line2, line3 };
+        const mulExpr = `${aVal} × ${bVal} = ${productVal}`;
+        const totalExpr = `${prevTotalVal} + ${productVal} = ${nextTotalVal}`;
+        const phaseText = (phase) => {
+            const mulClass = phase >= 2 ? `step-segment${phase === 2 ? ' bump' : ''}` : 'step-segment pending';
+            const totalClass = phase >= 3 ? `step-segment${phase === 3 ? ' bump' : ''}` : 'step-segment pending';
+            return `${base} yields <span class="${mulClass}">${mulExpr}</span>; adding this to the running total results in <span class="${totalClass}">${totalExpr}</span>.`;
+        };
+        return { line1, line2, line3, phaseText };
     }
 
     function renderCurrentStepWindow(stepIndex) {
@@ -1389,18 +1509,19 @@
             done();
             return;
         }
-        const { line1, line2, line3 } = getStepNarration(step);
+        const { phaseText } = getStepNarration(step);
         setCurrentStepNumber(currentStepIndex);
-        setCurrentStepText(line1);
+        setCurrentStepText(phaseText(1));
+        triggerActiveResultPop();
         playbackPhaseTimers.push(setTimeout(() => {
-            setCurrentStepText(line2);
-        }, PLAYBACK_PHASE_DELAY_MS));
+            setCurrentStepText(phaseText(2));
+        }, scaledDelay(PLAYBACK_PHASE_DELAY_MS)));
         playbackPhaseTimers.push(setTimeout(() => {
-            setCurrentStepText(line3);
-        }, PLAYBACK_PHASE_DELAY_MS * 2));
+            setCurrentStepText(phaseText(3));
+        }, scaledDelay(PLAYBACK_PHASE_DELAY_MS * 2)));
         playbackPhaseTimers.push(setTimeout(() => {
             done();
-        }, (PLAYBACK_PHASE_DELAY_MS * 2) + PLAYBACK_SUM_HOLD_MS));
+        }, scaledDelay((PLAYBACK_PHASE_DELAY_MS * 2) + PLAYBACK_SUM_HOLD_MS)));
     }
 
     function stopContinuous(reason = 'stop') {
@@ -1411,16 +1532,17 @@
             autoTimer = null;
         }
         clearPlaybackPhaseTimers();
+        setStepLogPlaybackLocked(false);
         const playBtn = document.getElementById('playBtn');
         playBtn.classList.remove('running');
         if (reason === 'pause') {
             wasPaused = true;
             resumeMode = hadPhaseTimers ? 'current' : 'next';
-            playBtn.textContent = 'Resume (Enter)';
+            setPlayButtonLabel('paused');
         } else {
             wasPaused = false;
             resumeMode = hadAutoTimer ? 'next' : resumeMode;
-            playBtn.textContent = 'Start (Enter)';
+            setPlayButtonLabel('stopped');
         }
     }
 
@@ -1444,10 +1566,11 @@
 
     function updateStepControls() {
         const hasSteps = steps.length > 0;
-        document.getElementById('firstStepBtn').disabled = !hasSteps || currentStepIndex <= 0;
-        document.getElementById('prevStepBtn').disabled = !hasSteps || currentStepIndex <= 0;
-        document.getElementById('nextStepBtn').disabled = !hasSteps || currentStepIndex >= steps.length - 1;
-        document.getElementById('lastStepBtn').disabled = !hasSteps || currentStepIndex >= steps.length - 1;
+        const playbackRunning = isPlaybackRunning();
+        document.getElementById('firstStepBtn').disabled = playbackRunning || !hasSteps || currentStepIndex <= 0;
+        document.getElementById('prevStepBtn').disabled = playbackRunning || !hasSteps || currentStepIndex <= 0;
+        document.getElementById('nextStepBtn').disabled = playbackRunning || !hasSteps || currentStepIndex >= steps.length - 1;
+        document.getElementById('lastStepBtn').disabled = playbackRunning || !hasSteps || currentStepIndex >= steps.length - 1;
         document.getElementById('playBtn').disabled = !hasSteps || currentStepIndex >= steps.length - 1;
         updateStepCounter();
     }
@@ -1799,7 +1922,8 @@
 
         const playBtn = document.getElementById('playBtn');
         playBtn.classList.add('running');
-        playBtn.textContent = 'Pause (Enter)';
+        setPlayButtonLabel('running');
+        setStepLogPlaybackLocked(true);
 
         if (wasPaused && resumeMode === 'current' && currentStepIndex >= 0 && steps[currentStepIndex]) {
             wasPaused = false;
@@ -1841,22 +1965,22 @@
                 delay = FINAL_CELL_HOLD_MS;
             }
 
-            if (currentStepIndex >= steps.length - 1) {
-                autoTimer = setTimeout(() => {
-                    renderMatricesForStep(currentStepIndex, 'none');
+                if (currentStepIndex >= steps.length - 1) {
+                    autoTimer = setTimeout(() => {
+                        renderMatricesForStep(currentStepIndex, 'none');
                     stopContinuous();
                     updateStepControls();
                 }, delay);
                 return;
-            }
+                }
 
-            autoTimer = setTimeout(() => {
-                autoTimer = null;
-                runContinuousStep();
-            }, delay);
-            updateStepControls();
-        });
-    }
+                autoTimer = setTimeout(() => {
+                    autoTimer = null;
+                    runContinuousStep();
+                }, scaledDelay(delay));
+                updateStepControls();
+            });
+        }
 
     document.querySelectorAll('.dimension-input').forEach((input) => {
         input.addEventListener('input', () => {
@@ -1917,6 +2041,18 @@
             event.preventDefault();
             stopContinuous();
             showNextStep({ animateFinalCell: true });
+            return;
+        }
+        if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            increasePlaybackSpeed();
+            flashPlaySpeedHint();
+            return;
+        }
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            decreasePlaybackSpeed();
+            flashPlaySpeedHint();
             return;
         }
         if (event.key === 'ArrowLeft') {
