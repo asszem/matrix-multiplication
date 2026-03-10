@@ -966,7 +966,6 @@
 
         .steps-table tr.group-start td,
         .steps-table tr.group-end td {
-            border-color: #2a3a48;
             box-shadow: none;
         }
 
@@ -989,10 +988,6 @@
         .steps-table tr.group-start td.group-name-cell,
         .steps-table tr.group-start td.group-result-cell {
             border-bottom: 2px solid #5b84a8;
-        }
-
-        .steps-table tr.group-row td:last-child {
-            border-right-color: #5b84a8;
         }
 
         .steps-table td.group-pair-focus {
@@ -1028,6 +1023,119 @@
             background: #223442;
             border-color: #49667a;
             color: #e6edf2;
+        }
+
+        @media (max-width: 900px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                overflow: auto;
+                padding: 0.35rem 0 1rem;
+            }
+
+            .container {
+                width: min(100vw - 0.7rem, 1200px);
+                height: auto;
+                min-height: calc(100vh - 0.7rem);
+                padding: 0.85rem;
+                overflow: visible;
+            }
+
+            .top-area {
+                position: static;
+            }
+
+            .page-title {
+                margin: 0.1rem 0 0.75rem 0;
+                font-size: 2.1rem;
+            }
+
+            .equation-layout {
+                width: 100%;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                row-gap: 0.42rem;
+                column-gap: 0;
+                justify-items: center;
+                align-items: center;
+            }
+
+            .dim-a { grid-column: 1; grid-row: 1; }
+            #matrixA { grid-column: 1; grid-row: 2; }
+            .operator-x { grid-column: 1; grid-row: 3; }
+            .dim-b { grid-column: 1; grid-row: 4; }
+            #matrixB { grid-column: 1; grid-row: 5; }
+            .operator-eq { grid-column: 1; grid-row: 6; }
+            .dim-r { grid-column: 1; grid-row: 7; margin-bottom: 0.2rem; }
+            #matrixResult { grid-column: 1; grid-row: 8; }
+
+            .operator {
+                width: auto;
+                font-size: 2rem;
+                line-height: 1;
+            }
+
+            .matrix {
+                width: max-content;
+                max-width: 100%;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 8px;
+            }
+
+            .cell {
+                width: 42px;
+                height: 42px;
+                font-size: 1rem;
+            }
+
+            .result-matrix .cell {
+                width: 46px;
+            }
+
+            .current-step-window {
+                width: 100%;
+            }
+
+            .current-step-text {
+                min-height: 4.1rem;
+                display: block;
+                text-align: left;
+                white-space: normal;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+                overflow: visible;
+                padding-left: 0.25rem;
+                padding-right: 0.25rem;
+            }
+
+            .step-controls {
+                margin-bottom: 0.7rem;
+            }
+
+            .step-controls-row {
+                gap: 0.45rem;
+            }
+
+            .step-btn {
+                padding: 0.44rem 0.72rem;
+            }
+
+            .step-log {
+                max-height: 52vh;
+                overflow-x: auto;
+                overflow-y: auto;
+            }
+
+            .steps-table {
+                font-size: 0.84rem;
+                min-width: 760px;
+            }
+
+            .steps-table th,
+            .steps-table td {
+                white-space: nowrap;
+            }
         }
     </style>
 </head>
