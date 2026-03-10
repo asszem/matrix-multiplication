@@ -377,11 +377,14 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 100%;
             text-align: center;
             font-weight: 700;
-            color: #1b5e20;
+            color: var(--result-cell-text, #1b5e20);
             line-height: 1;
+            background: var(--result-cell-bg, #c8e6c9);
+            border: 1px solid var(--result-cell-border, #2e7d32);
+            border-radius: 6px;
+            padding: 0.16rem 0.45rem;
         }
 
         .steps-table tr.group-start td {
@@ -885,12 +888,12 @@
         .steps-table th,
         .steps-table td {
             background: transparent;
-            border-color: transparent;
+            border-color: #2a3a48;
             color: #d6e0e8;
         }
 
         .steps-table th {
-            background: transparent;
+            background: #18232d;
             color: #c8d2da;
         }
 
@@ -898,6 +901,8 @@
             text-align: center;
             font-size: 1rem;
             letter-spacing: 0.02em;
+            background: #1c2a36;
+            border-color: #34495c;
         }
 
         .steps-table .group-name-cell,
@@ -907,15 +912,33 @@
 
         .steps-table tr.group-start td,
         .steps-table tr.group-end td {
-            border-color: transparent;
+            border-color: #2a3a48;
             box-shadow: none;
         }
 
-        .steps-table tr.group-start td.group-name-cell,
-        .steps-table tr.group-start td.group-result-cell,
-        .steps-table tr.group-start td.group-name-cell,
+        .steps-table tr.group-start td {
+            border-top: 2px solid #5b84a8;
+        }
+
+        .steps-table tr.group-end td {
+            border-bottom: 2px solid #5b84a8;
+        }
+
+        .steps-table tr.group-start td:first-child {
+            border-left: 2px solid #5b84a8;
+        }
+
         .steps-table tr.group-row td:last-child {
-            border-color: transparent;
+            border-right: 2px solid #5b84a8;
+        }
+
+        .steps-table tr.group-start td.group-name-cell,
+        .steps-table tr.group-start td.group-result-cell {
+            border-bottom: 2px solid #5b84a8;
+        }
+
+        .steps-table tr.group-row td:last-child {
+            border-right-color: #5b84a8;
         }
 
         .steps-table td.group-pair-focus {
