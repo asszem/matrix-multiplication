@@ -11,11 +11,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            min-height: 100vh;
+            height: 100vh;
             margin: 0;
             padding: 0.25rem 0 2rem;
             background-color: #f4f7f6;
             color: #333;
+            overflow: hidden;
         }
 
         .container {
@@ -25,6 +26,12 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             text-align: center;
             max-width: 1200px;
+            width: min(1200px, calc(100vw - 1rem));
+            height: calc(100vh - 0.5rem);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .page-title {
@@ -38,6 +45,7 @@
             top: 0;
             z-index: 10;
             background: white;
+            flex: 0 0 auto;
         }
 
         .matrix-panel {
@@ -221,6 +229,10 @@
         .step-panel {
             margin-top: 1.2rem;
             padding-top: 1rem;
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         .step-info {
@@ -240,6 +252,10 @@
             background: #fafafa;
             margin-bottom: 0.8rem;
             position: relative;
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .reverse-order-btn {
@@ -293,7 +309,7 @@
         .steps-table td {
             border: 1px solid #eceff1;
             padding: 0.35rem 0.45rem;
-            background: white;
+            background: transparent;
             vertical-align: middle;
             text-align: center;
         }
@@ -333,7 +349,7 @@
         }
 
         .steps-table th {
-            background: #f1f5f8;
+            background: transparent;
             color: #455a64;
             font-weight: 700;
         }
@@ -441,13 +457,15 @@
         }
 
         .step-pill.a {
-            background: #fff59d;
-            color: #5d4037;
+            background: #5a500e;
+            border: 1px solid #f59e0b;
+            color: #f7d9a6;
         }
 
         .step-pill.b {
-            background: #80deea;
-            color: #004d40;
+            background: #0f5a68;
+            border: 1px solid #38bdf8;
+            color: #d8f2ff;
         }
 
         .step-pill.r {
@@ -488,7 +506,11 @@
             font-size: 1.35rem;
             font-weight: 800;
             line-height: 1;
-            color: #1b5e20;
+            color: var(--result-cell-text, #1b5e20);
+            background: var(--result-cell-bg, #c8e6c9);
+            border: 1px solid var(--result-cell-border, #2e7d32);
+            border-radius: 6px;
+            padding: 0.14rem 0.45rem;
         }
 
         .steps-table tr.step-row:hover td.group-name-cell,
@@ -696,6 +718,240 @@
             background: #eceff1;
             color: #263238;
         }
+
+        /* Dark theme overrides */
+        body {
+            background: radial-gradient(1300px 620px at 100% 0%, #0f3738 0%, #111920 34%, #0b1015 100%);
+            color: #d2dbe3;
+            --result-cell-bg: #11452c;
+            --result-cell-border: #145737;
+            --result-cell-text: #9ef0a0;
+        }
+
+        .container {
+            background: rgba(15, 22, 29, 0.95);
+            color: #d3dde6;
+            border: 1px solid #233241;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+        }
+
+        .top-area {
+            background: rgba(15, 22, 29, 0.98);
+            border-bottom-color: #2b3b49;
+        }
+
+        .page-title {
+            color: #d7d8d2;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+        }
+
+        .matrix-panel,
+        .step-panel,
+        .step-log {
+            background: #111820;
+            border-color: #2c3947;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+        }
+
+        .matrix-dimension {
+            color: #b2c1cf;
+        }
+
+        .dimension-input {
+            background: linear-gradient(180deg, #282a36 0%, #242734 100%);
+            border-color: #3f4f63;
+            color: #f3f8fd;
+        }
+
+        .matrix {
+            background: linear-gradient(90deg, #16242f 0%, #13212a 100%);
+            border-left-color: #5580a9;
+            border-right-color: #5580a9;
+        }
+
+        .matrix .cell {
+            background: #131a20;
+            border-color: #1a2934;
+            color: #f1d6b2;
+        }
+
+        .cell.row-a-highlight,
+        .cell.col-a-highlight {
+            background: #3f3807;
+        }
+
+        .cell.row-b-highlight,
+        .cell.col-b-highlight {
+            background: #0c414b;
+        }
+
+        .cell.row-r-highlight,
+        .cell.col-r-highlight {
+            background: #124027;
+        }
+
+        .cell.active-a {
+            background: #655a10;
+            box-shadow: 0 0 0 2px #f59e0b inset;
+        }
+
+        .cell.active-b {
+            background: #147082;
+            box-shadow: 0 0 0 2px #38bdf8 inset;
+        }
+
+        .cell.active-result {
+            background: #25592f;
+            box-shadow: 0 0 0 2px #fb923c inset;
+        }
+
+        .operator {
+            color: #ff5f57;
+        }
+
+        .result-matrix {
+            background: linear-gradient(90deg, #152730 0%, #12232b 100%);
+        }
+
+        .result-matrix .cell {
+            background: var(--result-cell-bg);
+            border-color: var(--result-cell-border);
+            color: var(--result-cell-text);
+        }
+
+        .step-pill.r {
+            background: var(--result-cell-bg);
+            border: 1px solid var(--result-cell-border);
+            color: var(--result-cell-text);
+        }
+
+        .step-pill.r-work {
+            background: #2f6f4a;
+            border: 1px solid #3d845a;
+            color: var(--result-cell-text);
+        }
+
+        .group-result-value,
+        .group-name-content,
+        .group-result-target {
+            color: var(--result-cell-text);
+        }
+
+        .current-step-window {
+            background: #121c25;
+            border-color: #344b5b;
+        }
+
+        .current-step-title {
+            color: #9eb2c0;
+        }
+
+        .current-step-number,
+        .current-step-text,
+        .step-counter {
+            color: #dbe5ec;
+        }
+
+        .step-btn {
+            background: #121b24;
+            border-color: #3e4f61;
+            color: #d4dee6;
+        }
+
+        .step-btn:disabled {
+            background: #101821;
+            color: #667782;
+            border-color: #2a3742;
+        }
+
+        #playBtn {
+            background: #1a232d;
+            border-color: #55697f;
+            color: #eef2f5;
+        }
+
+        .reverse-order-btn {
+            background: #121b24;
+            border-color: #3e4f61;
+            color: #d4dee6;
+        }
+
+        .reverse-order-btn.active {
+            background: #1c2732;
+            border-color: #5d7b95;
+            color: #e6eff7;
+        }
+
+        .steps-table th,
+        .steps-table td {
+            background: transparent;
+            border-color: transparent;
+            color: #d6e0e8;
+        }
+
+        .steps-table th {
+            background: transparent;
+            color: #c8d2da;
+        }
+
+        .steps-table .log-title-row th {
+            text-align: center;
+            font-size: 1rem;
+            letter-spacing: 0.02em;
+        }
+
+        .steps-table .group-name-cell,
+        .steps-table .group-result-cell {
+            background-color: transparent;
+        }
+
+        .steps-table tr.group-start td,
+        .steps-table tr.group-end td {
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        .steps-table tr.group-start td.group-name-cell,
+        .steps-table tr.group-start td.group-result-cell,
+        .steps-table tr.group-start td.group-name-cell,
+        .steps-table tr.group-row td:last-child {
+            border-color: transparent;
+        }
+
+        .steps-table td.group-pair-focus {
+            box-shadow: none;
+        }
+
+        .step-log-toolbar {
+            color: #dbe5ec;
+        }
+
+        .error-modal-dialog {
+            background: #121c25;
+            border-color: #355062;
+            color: #dbe5ec;
+        }
+
+        .error-modal-title {
+            color: #ff8a80;
+        }
+
+        .error-modal-message,
+        .error-modal-message strong {
+            color: #dbe5ec;
+        }
+
+        .inner-dim-notice {
+            background: #16232d;
+            border: 1px solid #3a5567;
+            color: #e6edf2;
+        }
+
+        .inner-dim-notice .step-btn {
+            background: #223442;
+            border-color: #49667a;
+            color: #e6edf2;
+        }
     </style>
 </head>
 <body>
@@ -736,11 +992,11 @@
         </div>
         <div class="step-controls">
             <div class="step-controls-row">
-                <button id="firstStepBtn" class="step-btn" type="button">First Step (Home)</button>
+                <button id="firstStepBtn" class="step-btn" type="button">Initial State (Home)</button>
                 <button id="prevStepBtn" class="step-btn" type="button">Previous Step (&larr;)</button>
                 <button id="playBtn" class="step-btn" type="button">Start (Enter)</button>
                 <button id="nextStepBtn" class="step-btn" type="button">Next Step (&rarr;)</button>
-                <button id="lastStepBtn" class="step-btn" type="button">Last Step (End)</button>
+                <button id="lastStepBtn" class="step-btn" type="button">Final State (End)</button>
             </div>
         </div>
         <div id="stepLog" class="step-log"></div>
@@ -1077,18 +1333,18 @@
                 line3: ''
             };
         }
-        const rCell = `<span class="step-pill r">R(${step.i + 1}, ${step.j + 1})</span>`;
-        const aCell = `<span class="step-pill a">A(${step.i + 1}, ${step.k + 1})</span>`;
-        const bCell = `<span class="step-pill b">B(${step.k + 1}, ${step.j + 1})</span>`;
+        const rCell = `<span class="step-pill r">R(${step.i + 1},${step.j + 1})</span>`;
+        const aCell = `<span class="step-pill a">A(${step.i + 1},${step.k + 1})</span>`;
+        const bCell = `<span class="step-pill b">B(${step.k + 1},${step.j + 1})</span>`;
         const aVal = `<span class="step-pill a">${step.aVal}</span>`;
         const bVal = `<span class="step-pill b">${step.bVal}</span>`;
         const productVal = `<span class="step-pill r-work"><strong>${step.product}</strong></span>`;
         const prevTotalVal = `<span class="step-pill r-work">${step.prevSum}</span>`;
-        const nextTotalVal = `<span class="step-pill r-work"><strong>${step.nextSum}</strong></span>`;
+        const nextTotalVal = `<span class="step-pill r"><strong>${step.nextSum}</strong></span>`;
         const base = `Updating ${rCell} by multiplying ${aCell} and ${bCell}`;
         const line1 = `${base}`;
-        const line2 = `${base} → ${aVal} x ${bVal} = ${productVal}`;
-        const line3 = `${base} → ${aVal} x ${bVal} = ${productVal} and adding result to the running total → ${prevTotalVal} + ${productVal} = ${nextTotalVal}.`;
+        const line2 = `${base} yields ${aVal}×${bVal}=${productVal}`;
+        const line3 = `${base} yields ${aVal}×${bVal}=${productVal}; adding this to the running total results in ${prevTotalVal}+${productVal}=${nextTotalVal}.`;
         return { line1, line2, line3 };
     }
 
@@ -1176,14 +1432,7 @@
     function renderStepLog() {
         const stepLog = document.getElementById('stepLog');
         if (!steps.length || currentStepIndex < 0) {
-            stepLog.innerHTML = `<div class="step-log-toolbar"><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Toggle step order" aria-label="Toggle step order">${isReverseOrder ? 'Descending' : 'Ascending'} <span aria-hidden="true">⇅</span></button></div>`;
-            const reverseOrderBtn = document.getElementById('reverseOrderBtn');
-            if (reverseOrderBtn) {
-                reverseOrderBtn.addEventListener('click', () => {
-                    isReverseOrder = !isReverseOrder;
-                    renderStepLog();
-                });
-            }
+            stepLog.innerHTML = '';
             return;
         }
 
@@ -1223,7 +1472,7 @@
                 const highlightIdx = isReverseOrder ? group.rows.length - 1 : 0;
                 const anchorClass = highlightIdx === 0 ? '' : ' group-last-step-anchor';
                 const groupCells = rowIdx === 0
-                    ? `<td class="group-name-cell${anchorClass}" data-group-key="${groupKey}" data-group-i="${group.i}" data-group-j="${group.j}" rowspan="${group.rows.length}"><span class="group-name-content">R(${group.i + 1}, ${group.j + 1})</span></td><td class="group-result-cell${anchorClass}" data-group-key="${groupKey}" data-group-i="${group.i}" data-group-j="${group.j}" rowspan="${group.rows.length}"><button class="group-result-target" data-group-i="${group.i}" data-group-j="${group.j}" data-group-start-index="${startIndex}" type="button"><span class="group-result-value">${currentGroupValue}</span></button></td>`
+                    ? `<td class="group-name-cell${anchorClass}" data-group-key="${groupKey}" data-group-i="${group.i}" data-group-j="${group.j}" rowspan="${group.rows.length}"><span class="group-name-content">R(${group.i + 1}, ${group.j + 1})</span></td><td class="group-result-cell${anchorClass}" data-group-key="${groupKey}" data-group-i="${group.i}" data-group-j="${group.j}" rowspan="${group.rows.length}"><button class="group-result-target" data-group-i="${group.i}" data-group-j="${group.j}" data-group-start-index="${startIndex}" type="button"><span class="group-result-value step-pill r">${currentGroupValue}</span></button></td>`
                     : '';
                 const rowClass = [
                     'step-row',
@@ -1251,7 +1500,7 @@
             }).join('');
         }).join('');
 
-        stepLog.innerHTML = `<div class="step-log-toolbar"><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Toggle step order" aria-label="Toggle step order">${isReverseOrder ? 'Descending' : 'Ascending'} <span aria-hidden="true">⇅</span></button></div><table class="steps-table"><colgroup><col style="width: 11%;"><col style="width: 12%;"><col style="width: 26%;"><col style="width: 20%;"><col style="width: 23%;"><col style="width: 8%;"></colgroup><thead><tr><th>Group</th><th>Result</th><th>Cells</th><th class="mul-col">Multiplication</th><th class="total-col">Running Total</th><th>Step</th></tr></thead><tbody>${tableRows}</tbody></table>`;
+        stepLog.innerHTML = `<div class="step-log-toolbar"><button id="reverseOrderBtn" class="reverse-order-btn${isReverseOrder ? ' active' : ''}" type="button" title="Toggle step order" aria-label="Toggle step order">${isReverseOrder ? 'Earliest step on top' : 'Latest step on top'} <span aria-hidden="true">⇅</span></button></div><table class="steps-table"><colgroup><col style="width: 11%;"><col style="width: 12%;"><col style="width: 26%;"><col style="width: 20%;"><col style="width: 23%;"><col style="width: 8%;"></colgroup><thead><tr class="log-title-row"><th colspan="6">Step log table</th></tr><tr><th>Result cell</th><th>Result</th><th>Source cells</th><th class="mul-col">Multiplication</th><th class="total-col">Running Total</th><th>Step</th></tr></thead><tbody>${tableRows}</tbody></table>`;
 
         const reverseOrderBtn = document.getElementById('reverseOrderBtn');
         if (reverseOrderBtn) {
@@ -1496,7 +1745,7 @@
         if (!steps.length) {
             return;
         }
-        currentStepIndex = 0;
+        currentStepIndex = -1;
         renderCurrentStep();
     }
 
@@ -1504,6 +1753,7 @@
         if (!steps.length) {
             return;
         }
+        isReverseOrder = false;
         currentStepIndex = steps.length - 1;
         renderCurrentStep();
     }
